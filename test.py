@@ -16,22 +16,27 @@ b_torch = torch.tensor(b_np)
 c_torch = torch.mul(a_torch, b_torch)
 print(c_torch.numpy())
 
+torch.testing.assert_allclose(c_torch.numpy(), hma.to_numpy(c_hma))
+print("passed correctness")
+
 import time
 
-for _ in range(100):
+for _ in range(1000):
   c_hma = hma.mul([a_hma, b_hma])[0]
 t = time.time()
-for _ in range(100):
+for _ in range(1000000):
   c_hma = hma.mul([a_hma, b_hma])[0]
-d = time.time() - t
+d1 = time.time() - t
 
-print(f"{d*1e6 :.2f}")
+print(f"{d1 :.2f}us per iter")
 
-for _ in range(100):
+for _ in range(1000):
   c_torch = torch.mul(a_torch, b_torch)
 t = time.time()
-for _ in range(100):
+for _ in range(1000000):
   c_torch = torch.mul(a_torch, b_torch)
-d = time.time() - t
+d2 = time.time() - t
 
-print(f"{d*1e6 :.2f}")
+print(f"{d2 :.2f}us per iter")
+
+print(f"{(d2 - d1) / d2 * 100:.2f}% faster")
