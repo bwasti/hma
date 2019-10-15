@@ -1,4 +1,5 @@
 #include "tensor.h"
+#include <stdlib.h>
 
 std::vector<size_t> Tensor::shape() const { return shape_; }
 void *Tensor::ptr() { return ptr_; }
@@ -31,5 +32,5 @@ size_t Tensor::dtype_size() const {
 void Tensor::resize(const std::vector<size_t> &shape, Dtype d) {
   shape_ = shape;
   dtype_ = d;
-  ptr_ = malloc(dtype_size() * size());
+  ptr_ = aligned_alloc(32, dtype_size() * size());
 }
