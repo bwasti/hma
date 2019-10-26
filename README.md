@@ -2,7 +2,7 @@
 
 Setup a clean Python env:
 
-```
+```bash
 python3.7 -m venv env
 source env/bin/activate
 pip install numpy torch
@@ -10,7 +10,7 @@ pip install numpy torch
 
 Build from source:
 
-```
+```bash
 mkdir build
 cd build
 cmake .. -DCMAKE_BUILD_TYPE=Release
@@ -19,7 +19,7 @@ PYTHONPATH=. python ../test.py
 ```
 ## Usage
 
-```
+```python
 import numpy as np
 import pyhma as ph
 

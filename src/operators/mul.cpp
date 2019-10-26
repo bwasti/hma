@@ -1,4 +1,4 @@
-#include "methods.h"
+#include "method.h"
 
 REGISTER_METHOD(mul, [](Context &ctx) {
   const auto &t1 = ctx.input(0);
@@ -14,14 +14,15 @@ REGISTER_METHOD(mul, [](Context &ctx) {
   }
 });
 
-REGISTER_GRAD(mul, [](const std::vector<Variable*>& inputs, const std::vector<Variable*>& ginputs) -> std::vector<Variable*> {
-  return {
-    call("mul", { ginputs[0], inputs[1] })[0],
-    call("mul", { ginputs[0], inputs[0] })[0]
-    };
-});
+REGISTER_GRAD(mul,
+              [](const std::vector<Variable *> &inputs,
+                 const std::vector<Variable *> &ginputs)
+                  -> std::vector<Variable *> {
+                return {call("mul", {ginputs[0], inputs[1]})[0],
+                        call("mul", {ginputs[0], inputs[0]})[0]};
+              });
 
-REGISTER_SHAPE(mul, [](const std::vector<Variable*>& inputs) -> std::vector<Size> {
-  return inputs[0]->shape;
-});
-
+REGISTER_SHAPE(mul,
+               [](const std::vector<Variable *> &inputs) -> std::vector<Size> {
+                 return inputs[0]->shape;
+               });

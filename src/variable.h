@@ -6,10 +6,7 @@
 #include <vector>
 
 struct Size {
-  enum Tag {
-    Id,
-    Number
-  };
+  enum Tag { Id, Number };
   Tag tag;
 
   // union {
@@ -36,7 +33,8 @@ struct Variable {
 };
 
 struct Operator {
-  Operator(std::string method_, const std::vector<Variable*>& inputs_, size_t num_outputs, Graph* graph_);
+  Operator(std::string method_, const std::vector<Variable*>& inputs_,
+           size_t num_outputs, Graph* graph_);
   const Method* method;
   std::vector<Variable*> inputs;
   std::vector<Variable*> outputs;
@@ -45,19 +43,21 @@ struct Operator {
 
 struct Graph {
   inline Variable* create_var() {
-		variables.emplace_back();
-		auto* v = &variables.back();
-		v->graph = this;
-		return v;
-	}
+    variables.emplace_back();
+    auto* v = &variables.back();
+    v->graph = this;
+    return v;
+  }
 
-  inline Operator* create_op(std::string method, const std::vector<Variable*>& inputs, size_t num_outputs) {
-		operators.emplace_back(method, inputs, num_outputs, this);
-		auto* o = &operators.back();
-		o->graph = this;
-		return o;
-	}
-  
+  inline Operator* create_op(std::string method,
+                             const std::vector<Variable*>& inputs,
+                             size_t num_outputs) {
+    operators.emplace_back(method, inputs, num_outputs, this);
+    auto* o = &operators.back();
+    o->graph = this;
+    return o;
+  }
+
  private:
   std::list<Variable> variables;
   std::list<Operator> operators;

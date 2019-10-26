@@ -9,10 +9,10 @@
 #include "tensor.h"
 #include "variable.h"
 
-#define ENFORCE(cond) \
-if (!(cond)) { \
-  throw std::runtime_error("Failed: "#cond);\
-}
+#define ENFORCE(cond)                           \
+  if (!(cond)) {                                \
+    throw std::runtime_error("Failed: " #cond); \
+  }
 
 class Context {
  public:
@@ -28,14 +28,11 @@ class Context {
   std::vector<Tensor *> &outputs_;
 };
 
-using GradFn = std::function<std::vector<Variable*>(
-      const std::vector<Variable*>&,
-      const std::vector<Variable*>&
-      )>;
+using GradFn = std::function<std::vector<Variable *>(
+    const std::vector<Variable *> &, const std::vector<Variable *> &)>;
 
-using ShapeFn = std::function<std::vector<Size>(
-      const std::vector<Variable*>&
-      )>;
+using ShapeFn =
+    std::function<std::vector<Size>(const std::vector<Variable *> &)>;
 
 struct Method {
   std::string name;
@@ -46,11 +43,11 @@ struct Method {
 };
 
 std::unordered_map<std::string, Method> &getMethodMap();
-inline const Method& getMethod(std::string name) {
-	auto method_iter = getMethodMap().find(name);
+inline const Method &getMethod(std::string name) {
+  auto method_iter = getMethodMap().find(name);
   HMA_ENFORCE(method_iter != getMethodMap().end());
-	auto& method = method_iter->second;
-	return method;
+  auto &method = method_iter->second;
+  return method;
 }
 
 class RegMethod {
@@ -63,14 +60,12 @@ class RegMethod {
   }
 };
 
-class RegGrad{
+class RegGrad {
  public:
-  RegGrad(std::string name, GradFn grad) {
-    getMethodMap()[name].grad = grad;
-  }
+  RegGrad(std::string name, GradFn grad) { getMethodMap()[name].grad = grad; }
 };
 
-class RegShape{
+class RegShape {
  public:
   RegShape(std::string name, ShapeFn shape) {
     getMethodMap()[name].shape = shape;
