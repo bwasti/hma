@@ -17,6 +17,28 @@ cmake .. -DCMAKE_BUILD_TYPE=Release
 make -j24
 PYTHONPATH=. python ../test.py
 ```
+## Usage
+
+```
+import numpy as np
+import pyhma as ph
+
+# use numpy to seed values
+a_ = np.random.randn(128,128).astype(np.float32)
+b_ = np.random.randn(128,128).astype(np.float32)
+ones = np.ones((128,128)).astype(np.float32)
+
+# create a pyhma Tensor
+a = ph.Tensor(a_)
+b = ph.Tensor(b_)
+c = func(a, b)
+# create jacobian
+g = c.grad(a)
+# call the jacobian
+a_grad = g(ph.Tensor(ones))
+# no execution happens until this line
+print(a_grad.np())
+```
 
 ## Code
 
