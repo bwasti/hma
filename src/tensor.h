@@ -31,4 +31,5 @@ class Tensor {
   std::vector<size_t> shape_;
   void *ptr_;
   Dtype dtype_;
+  bool requires_grad_;
 };
