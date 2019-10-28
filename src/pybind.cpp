@@ -87,6 +87,11 @@ PYBIND11_MODULE(hma, m) {
     return tr;
   });
 
+  m.def("swap", [](std::shared_ptr<TensorRef> y, std::shared_ptr<TensorRef> x) {
+    // TODO enforce shape info stuff
+    y->variable->swap(x->variable);
+  });
+
   // Old API
   py::class_<Tensor, std::shared_ptr<Tensor>>(m, "TensorRaw")
       .def(py::init<std::vector<size_t>>())

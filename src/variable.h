@@ -9,6 +9,9 @@ struct Size {
   enum Tag { Id, Number };
   Tag tag;
 
+  Size(int i) : tag(Number), num(i) {}
+  Size() : tag(Id), id(1337) {}
+
   // union {
   int id;
   int num;
@@ -30,6 +33,8 @@ struct Variable {
   Graph* graph;
   mutable Tensor* tensor = nullptr;
   mutable size_t depth = 0;
+  void invalidate_deps() const;
+  void swap(Variable*);
 };
 
 struct Operator {

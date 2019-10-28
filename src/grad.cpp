@@ -10,9 +10,14 @@ Variable* grad(Variable* y, Variable* x, Variable* j) {
   std::unordered_map<Variable*, std::set<int>> need_grad;
   need_grad[y] = {-1};
   std::unordered_map<Variable*, std::set<int>> no_grad;
-  std::queue<std::pair<Variable*, int>> q;
+  // TODO make this a set, remove set<int>
+  using Route = std::unordered_map<Variable*, std::set<int>>;
+  std::queue<std::tuple<Variable*, int, Route>> q;
   // Iterate from X, as most nets work this way
-  q.push(std::make_pair(x, -1));
+  Route init_route;
+  int use_count = 0;
+  init_route[x] = {-1};
+  q.push(std::make_tuple(x, -1, init_route));
   // q contains variables that haven't been
   // traversed.
   while (q.size()) {
@@ -30,9 +35,9 @@ Variable* grad(Variable* y, Variable* x, Variable* j) {
     // If we can't find y -- add the whole route to no_grad
     Variable* var;
     int index;
-    std::tie(var, index) = q.front();
-    q.pop();
     std::unordered_map<Variable*, std::set<int>> route;
+    std::tie(var, index, route) = q.front();
+    q.pop();
     route[var] = {index};
 
     while (var) {
@@ -62,7 +67,11 @@ Variable* grad(Variable* y, Variable* x, Variable* j) {
       route[var].insert(0);
       iter++;
       while (iter != next.end()) {
-        q.push(*iter);
+        q.push(std::make_tuple(
+        iter->first,
+        iter->second,
+        route
+        ));
         iter++;
       }
     }
@@ -73,6 +82,8 @@ Variable* grad(Variable* y, Variable* x, Variable* j) {
   grad_map[y] = j;
   std::vector<Operator*> frontier{y->op};
   std::vector<Operator*> next_frontier;
+  // This could be way more efficient
+  std::set<Operator*> seen_ops{y->op};
   while (frontier.size()) {
     next_frontier.clear();
     for (const auto& op : frontier) {
@@ -92,15 +103,15 @@ Variable* grad(Variable* y, Variable* x, Variable* j) {
           } else {
             grad_map[input] = g_outs[i];
           }
-          if (input->op) {
+          if (input->op && seen_ops.find(input->op) == seen_ops.end()) {
             next_frontier.emplace_back(input->op);
-          } else {
-            HMA_ENFORCE(input == x);
+            seen_ops.insert(input->op);
           }
         }
       }
     }
     frontier = next_frontier;
   }
+  HMA_ENFORCE(grad_map.find(x) != grad_map.end());
   return grad_map[x];
 }

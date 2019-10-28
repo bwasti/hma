@@ -19,13 +19,45 @@ Operator::Operator(std::string name, const std::vector<Variable*>& inputs_,
   }
 }
 
+void Variable::invalidate_deps() const {
+  std::vector<const Variable*> frontier;
+  for (auto dep : deps) {
+    for (auto output : dep->outputs) {
+      frontier.emplace_back(output);
+    }
+  }
+  std::vector<const Variable*> next_frontier;
+  while (frontier.size()) {
+    next_frontier.clear();
+    for (auto var : frontier) {
+      if (var->tensor) {
+        delete var->tensor;
+      }
+      for (auto dep : var->deps) {
+        for (auto output : dep->outputs) {
+          next_frontier.emplace_back(output);
+        }
+      }
+    }
+    frontier = next_frontier;
+  }
+}
+
+void Variable::swap(Variable* v) {
+  HMA_ENFORCE(v->graph == graph);
+  invalidate_deps();
+  auto old_t = tensor;
+  tensor = v->tensor;
+  v->tensor = old_t;
+}
+
 std::vector<Variable*> call(const std::string& name,
                             const std::vector<Variable*>& vs) {
   HMA_ENFORCE(vs.size());
   auto* graph = vs[0]->graph;
   for (const auto& v : vs) {
     HMA_ENFORCE(graph == v->graph);
-    if (v->depth > 0 || 1) {
+    if (v->depth > 10000) {
       v->tensor = resolve(v);
     }
   }
@@ -39,6 +71,7 @@ std::vector<Variable*> call(const std::string& name,
 
 Tensor* resolve(const Variable* v) {
   if (v->tensor) {
+    v->depth = 0;
     return v->tensor;
   } else {
     HMA_ENFORCE(v->op);
@@ -54,6 +87,7 @@ Tensor* resolve(const Variable* v) {
     auto& method = *v->op->method;
     Context ctx{inputs, outputs};
     method.kernel(ctx);
+    v->depth = 0;
     return v->tensor;
   }
 }
