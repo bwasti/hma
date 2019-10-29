@@ -11,10 +11,7 @@ pip install numpy torch
 Build from source:
 
 ```bash
-mkdir build
-cd build
-cmake .. -DCMAKE_BUILD_TYPE=Release
-make -j24
+./build.sh
 PYTHONPATH=. python ../test.py
 ```
 ## Usage
