@@ -4,7 +4,7 @@
 #include <vector>
 
 class Tensor {
- public:
+public:
   enum class Dtype {
     float_,
     int_,
@@ -27,7 +27,7 @@ class Tensor {
   void *release();
   const void *ptr() const;
 
- private:
+private:
   std::vector<size_t> shape_;
   void *ptr_;
   Dtype dtype_;

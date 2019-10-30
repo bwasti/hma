@@ -1,6 +1,6 @@
 #include "method.h"
 
-REGISTER_CPU_METHOD(neg, [](Context& ctx) {
+REGISTER_CPU_METHOD(neg, [](Context &ctx) {
   const auto &t = ctx.input(0);
   auto *out = ctx.output(0);
   out->resize(t.shape(), t.dtype());
@@ -22,4 +22,3 @@ REGISTER_SHAPE(neg,
                [](const std::vector<Variable *> &inputs) -> std::vector<Size> {
                  return inputs[0]->shape;
                });
-

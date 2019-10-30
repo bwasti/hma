@@ -25,4 +25,3 @@ REGISTER_SHAPE(sub,
                [](const std::vector<Variable *> &inputs) -> std::vector<Size> {
                  return inputs[0]->shape;
                });
-

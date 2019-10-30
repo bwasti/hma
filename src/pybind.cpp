@@ -1,12 +1,12 @@
-#include <pybind11/numpy.h>
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <iostream>
-#include <memory>
 #include "error.h"
 #include "grad.h"
 #include "method.h"
 #include "tensor.h"
+#include <iostream>
+#include <memory>
+#include <pybind11/numpy.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
 
 namespace py = pybind11;
 
@@ -14,9 +14,9 @@ namespace py = pybind11;
 // to deal with everything.
 // Invariant: variable is in graph
 struct TensorRef {
-  Variable* variable;
+  Variable *variable;
   // TODO
-  Graph* graph;  // std::shared_ptr<Graph> graph;
+  Graph *graph; // std::shared_ptr<Graph> graph;
 };
 
 static Graph g;
@@ -26,12 +26,12 @@ PYBIND11_MODULE(hma, m) {
         [](py::array_t<float, py::array::c_style | py::array::forcecast> arr)
             -> std::shared_ptr<TensorRef> {
           auto tr = std::make_shared<TensorRef>();
-          tr->graph = &g;  // std::make_shared<Graph>();
-          auto* v = tr->graph->create_var();
+          tr->graph = &g; // std::make_shared<Graph>();
+          auto *v = tr->graph->create_var();
           tr->variable = v;
           v->tensor = new Tensor();
           py::buffer_info buf = arr.request();
-          auto* t = v->tensor;
+          auto *t = v->tensor;
           t->resize(std::vector<size_t>{buf.shape.begin(), buf.shape.end()},
                     Tensor::Dtype::float_);
           memcpy(t->ptr(), buf.ptr, t->size() * t->dtype_size());
@@ -41,7 +41,7 @@ PYBIND11_MODULE(hma, m) {
   m.def("to_numpy", [](std::shared_ptr<TensorRef> tr) -> py::array_t<float> {
     auto t = resolve(tr->variable);
     py::buffer_info buf;
-    buf.ptr = (void*)t->ptr();
+    buf.ptr = (void *)t->ptr();
     buf.itemsize = sizeof(float);
     buf.format = py::format_descriptor<float>::format();
     buf.ndim = t->shape().size();
@@ -56,20 +56,20 @@ PYBIND11_MODULE(hma, m) {
 
   py::class_<TensorRef, std::shared_ptr<TensorRef>>(m, "Tensor");
 
-  for (const auto& method : getMethodMap()) {
+  for (const auto &method : getMethodMap()) {
     m.def(method.first.c_str(),
           [&method](std::vector<std::shared_ptr<TensorRef>> inputs)
               -> std::vector<std::shared_ptr<TensorRef>> {
-            std::vector<Variable*> inputs_;
+            std::vector<Variable *> inputs_;
             auto graph = inputs[0]->graph;
-            for (const auto& i : inputs) {
+            for (const auto &i : inputs) {
               inputs_.emplace_back(i->variable);
               // TODO: merge graphs, for memory opt
               HMA_ENFORCE(i->graph == graph);
             }
-            std::vector<Variable*> vs = call(method.first, inputs_);
+            std::vector<Variable *> vs = call(method.first, inputs_);
             std::vector<std::shared_ptr<TensorRef>> out;
-            for (const auto& v : vs) {
+            for (const auto &v : vs) {
               auto tr = std::make_shared<TensorRef>();
               tr->variable = v;
               tr->graph = inputs[0]->graph;

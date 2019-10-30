@@ -21,10 +21,10 @@ size_t Tensor::size(size_t from) const {
 Tensor::Dtype Tensor::dtype() const { return dtype_; }
 size_t Tensor::dtype_size() const {
   switch (dtype_) {
-    case Tensor::Dtype::float_:
-      return sizeof(float);
-    case Tensor::Dtype::int_:
-      return sizeof(int);
+  case Tensor::Dtype::float_:
+    return sizeof(float);
+  case Tensor::Dtype::int_:
+    return sizeof(int);
   }
   return 0;
 }

@@ -17,12 +17,10 @@ REGISTER_GRAD(broadcast,
               [](const std::vector<Variable *> &inputs,
                  const std::vector<Variable *> &ginputs)
                   -> std::vector<Variable *> {
-                return call("sum", { ginputs[0] });
+                return call("sum", {ginputs[0]});
               });
 
 REGISTER_SHAPE(broadcast,
                [](const std::vector<Variable *> &inputs) -> std::vector<Size> {
                  return inputs[1]->shape;
                });
-
-

@@ -14,4 +14,3 @@ REGISTER_METHOD(CUDA, mul, [](Context &ctx) {
   auto N = t1.size();
   mul(N, d1, d2, out_d);
 });
-
