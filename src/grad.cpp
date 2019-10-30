@@ -5,19 +5,18 @@
 #include <queue>
 #include <set>
 #include <unordered_map>
+#include <unordered_set>
 
 Variable* grad(Variable* y, Variable* x, Variable* j) {
-  std::unordered_map<Variable*, std::set<int>> need_grad;
-  need_grad[y] = {-1};
-  std::unordered_map<Variable*, std::set<int>> no_grad;
-  // TODO make this a set, remove set<int>
-  using Route = std::unordered_map<Variable*, std::set<int>>;
-  std::queue<std::tuple<Variable*, int, Route>> q;
+  std::unordered_set<Variable*> need_grad;
+  need_grad.insert(y);
+  std::unordered_set<Variable*> no_grad;
+  using Route = std::unordered_set<Variable*>;
+  std::queue<std::pair<Variable*, Route>> q;
   // Iterate from X, as most nets work this way
   Route init_route;
-  int use_count = 0;
-  init_route[x] = {-1};
-  q.push(std::make_tuple(x, -1, init_route));
+  init_route.insert(x);
+  q.push(std::make_pair(x, init_route));
   // q contains variables that haven't been
   // traversed.
   while (q.size()) {
@@ -34,11 +33,10 @@ Variable* grad(Variable* y, Variable* x, Variable* j) {
     // If we find y -- add the whole route to need_grad
     // If we can't find y -- add the whole route to no_grad
     Variable* var;
-    int index;
-    std::unordered_map<Variable*, std::set<int>> route;
-    std::tie(var, index, route) = q.front();
+    std::unordered_set<Variable*> route;
+    std::tie(var, route) = q.front();
     q.pop();
-    route[var] = {index};
+    route.insert(var);
 
     while (var) {
       if (var == y) {
@@ -46,13 +44,13 @@ Variable* grad(Variable* y, Variable* x, Variable* j) {
         break;
       }
       // add to q
-      std::vector<std::pair<Variable*, int>> next;
+      std::vector<Variable*> next;
       for (auto dep : var->deps) {
         auto i = 0;
         for (auto inp : dep->inputs) {
           if (inp == var) {
             for (const auto& out : dep->outputs) {
-              next.emplace_back(std::make_pair(out, i));
+              next.emplace_back(out);
             }
           }
           i++;
@@ -63,15 +61,11 @@ Variable* grad(Variable* y, Variable* x, Variable* j) {
         break;
       }
       auto iter = next.begin();
-      var = iter->first;
-      route[var].insert(0);
+      var = *iter;
+      route.insert(var);
       iter++;
       while (iter != next.end()) {
-        q.push(std::make_tuple(
-        iter->first,
-        iter->second,
-        route
-        ));
+        q.push(std::make_pair(*iter, route));
         iter++;
       }
     }

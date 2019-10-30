@@ -4,8 +4,25 @@ import pyhma as ph
 import torch
 import time
 
-size = 64
 iters = 10000
+a = np.random.randn(1,1)
+a_ph = ph.Tensor(a)
+a_t = torch.tensor(a)
+
+t = time.time()
+for _ in range(iters):
+  a_t = (a_t + a_t) / 2
+print(a_t.numpy())
+print("PT: ", time.time() - t)
+
+t = time.time()
+for _ in range(iters):
+  a_ph = (a_ph + a_ph) / 2
+print(a_ph.np())
+print("PH: ", time.time() - t)
+
+size = 128
+iters = 20000
 # y = a * x
 a = np.random.randn(size).astype(np.float32)
 ref = np.arange(size).astype(np.float32)

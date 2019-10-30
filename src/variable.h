@@ -33,8 +33,6 @@ struct Variable {
   Graph* graph;
   mutable Tensor* tensor = nullptr;
   mutable size_t depth = 0;
-  void invalidate_deps() const;
-  void swap(Variable*);
 };
 
 struct Operator {
