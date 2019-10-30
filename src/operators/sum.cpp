@@ -1,6 +1,6 @@
 #include "method.h"
 
-REGISTER_METHOD(sum, [](Context &ctx) {
+REGISTER_CPU_METHOD(sum, [](Context &ctx) {
   const auto &t1 = ctx.input(0);
   auto *out = ctx.output(0);
   out->resize({1}, t1.dtype());

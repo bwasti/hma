@@ -36,11 +36,14 @@ using ShapeFn =
 
 struct Method {
   std::string name;
-  std::function<void(Context &ctx)> kernel;
+  std::vector<std::function<void(Context &ctx)>> kernels;
   GradFn grad;
   ShapeFn shape;
   size_t num_outputs;
 };
+
+std::unordered_map<std::string, size_t> &getTagMap();
+size_t getTag(std::string tag_name);
 
 std::unordered_map<std::string, Method> &getMethodMap();
 inline const Method &getMethod(std::string name) {
@@ -52,11 +55,15 @@ inline const Method &getMethod(std::string name) {
 
 class RegMethod {
  public:
-  RegMethod(std::string name, std::function<void(Context &ctx)> kernel,
+  RegMethod(size_t tag, std::string name, std::function<void(Context &ctx)> kernel,
             size_t num_out) {
-    getMethodMap()[name].name = name;
-    getMethodMap()[name].kernel = kernel;
-    getMethodMap()[name].num_outputs = num_out;
+    auto& method = getMethodMap()[name];
+    method.name = name;
+    if (tag >= method.kernels.size()) {
+      method.kernels.resize(tag + 1);
+    }
+    method.kernels[tag] = kernel;
+    method.num_outputs = num_out;
   }
 };
 
@@ -72,17 +79,18 @@ class RegShape {
   }
 };
 
-#define REG_W_NUM_OUTPUTS(name, kernel, num_outputs) \
-  static RegMethod _reg_method_##name(#name, kernel, num_outputs);
-#define REG_DEFAULT_OUTPUTS(name, kernel) \
-  static RegMethod _reg_method_##name(#name, kernel, 1);
+#define REG_W_NUM_OUTPUTS(tag, name, kernel, num_outputs) \
+  static RegMethod _reg_method_##name_##tag(getTag(#tag), #name, kernel, num_outputs);
+#define REG_DEFAULT_OUTPUTS(tag, name, kernel) \
+  static RegMethod _reg_method_##name_##tag(getTag(#tag), #name, kernel, 1);
 
 // Cool trick, right? Found on stackoverflow
-#define GET_4TH_ARG(arg1, arg2, arg3, arg4, ...) arg4
+#define GET_5TH_ARG(arg1, arg2, arg3, arg4, arg5, ...) arg5
 #define REG_METHOD_MACRO_CHOOSER(...) \
-  GET_4TH_ARG(__VA_ARGS__, REG_W_NUM_OUTPUTS, REG_DEFAULT_OUTPUTS)
+  GET_5TH_ARG(__VA_ARGS__, REG_W_NUM_OUTPUTS, REG_DEFAULT_OUTPUTS)
 
 #define REGISTER_METHOD(...) REG_METHOD_MACRO_CHOOSER(__VA_ARGS__)(__VA_ARGS__)
+#define REGISTER_CPU_METHOD(...) REGISTER_METHOD(CPU, __VA_ARGS__)
 
 // ...'s are for commas in the macro invocations (with lambdas)
 #define REGISTER_GRAD(name, ...) \

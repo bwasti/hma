@@ -1,6 +1,6 @@
 #include "method.h"
 
-REGISTER_METHOD(broadcast, [](Context &ctx) {
+REGISTER_CPU_METHOD(broadcast, [](Context &ctx) {
   const auto &t1 = ctx.input(0);
   const auto &t2 = ctx.input(1);
   auto *out = ctx.output(0);

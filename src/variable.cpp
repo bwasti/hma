@@ -54,7 +54,8 @@ Tensor* resolve(const Variable* v) {
     }
     auto& method = *v->op->method;
     Context ctx{inputs, outputs};
-    method.kernel(ctx);
+    HMA_ENFORCE(method.kernels.size() > getTag("CPU"));
+    method.kernels.at(getTag("CPU"))(ctx);
     v->depth = 0;
     return v->tensor;
   }
