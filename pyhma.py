@@ -66,6 +66,12 @@ class Tensor:
   def np(self):
     return hma.to_numpy(self.cTensor)
 
+  def cuda(self):
+    return self.__class__(hma.to_cuda([self.cTensor])[0])
+
+  def cpu(self):
+    return self.__class__(hma.to_cpu([self.cTensor])[0])
+
   def grad(self, other):
     def g(j=Tensor(np.array(1))):
       return self.__class__(hma.grad(self.cTensor, other.cTensor, j.cTensor))

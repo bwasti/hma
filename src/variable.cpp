@@ -47,15 +47,21 @@ Tensor *resolve(const Variable *v) {
     for (const auto &i : v->op->inputs) {
       inputs.emplace_back(resolve(i));
     }
+    const auto &tag = inputs[0]->tag();
+    for (const auto &input : inputs) {
+      HMA_ENFORCE(input->tag() == tag);
+    }
     std::vector<Tensor *> outputs;
     for (const auto &o : v->op->outputs) {
-      o->tensor = new Tensor();
+      o->tensor = new Tensor(tag);
       outputs.emplace_back(o->tensor);
     }
     auto &method = *v->op->method;
     Context ctx{inputs, outputs};
-    HMA_ENFORCE(method.kernels.size() > getTag("CPU"));
-    method.kernels.at(getTag("CPU"))(ctx);
+    HMA_ENFORCE(method.kernels.size() > tag);
+    const auto &f = method.kernels.at(tag);
+    HMA_ENFORCE(f);
+    f(ctx);
     v->depth = 0;
     return v->tensor;
   }

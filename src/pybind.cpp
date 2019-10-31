@@ -40,6 +40,7 @@ PYBIND11_MODULE(hma, m) {
 
   m.def("to_numpy", [](std::shared_ptr<TensorRef> tr) -> py::array_t<float> {
     auto t = resolve(tr->variable);
+    HMA_ENFORCE(t->tag() == getTag("CPU"));
     py::buffer_info buf;
     buf.ptr = (void *)t->ptr();
     buf.itemsize = sizeof(float);

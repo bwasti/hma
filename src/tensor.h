@@ -1,5 +1,6 @@
 #pragma once
 
+#include "tag.h"
 #include <iostream>
 #include <vector>
 
@@ -9,7 +10,8 @@ public:
     float_,
     int_,
   };
-  Tensor() {}
+  Tensor() : tag_(getTag("CPU")) {}
+  Tensor(size_t tag) : tag_(tag) {}
   Tensor(std::vector<size_t> shape) : shape_(shape) {}
   Tensor(std::vector<size_t> shape, void *ptr, Dtype d)
       : shape_(shape), ptr_(ptr), dtype_(d) {}
@@ -23,6 +25,9 @@ public:
   size_t size(size_t from = 0) const;
   Dtype dtype() const;
   size_t dtype_size() const;
+  size_t bytes() const;
+  size_t tag() const;
+  void setTag(size_t t);
   void *ptr();
   void *release();
   const void *ptr() const;
@@ -32,4 +37,5 @@ private:
   void *ptr_;
   Dtype dtype_;
   bool requires_grad_;
+  size_t tag_;
 };

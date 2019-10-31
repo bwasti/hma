@@ -1,4 +1,5 @@
 #include "tensor.h"
+#include "alloc.h"
 
 std::vector<size_t> Tensor::shape() const { return shape_; }
 void *Tensor::ptr() { return ptr_; }
@@ -8,6 +9,8 @@ void *Tensor::release() {
   ptr_ = nullptr;
   return ptr;
 }
+size_t Tensor::tag() const { return tag_; }
+void Tensor::setTag(size_t tag) { tag_ = tag; }
 
 size_t Tensor::size(size_t from) const {
   size_t s = 1;
@@ -17,6 +20,8 @@ size_t Tensor::size(size_t from) const {
   }
   return s;
 }
+
+size_t Tensor::bytes() const { return dtype_size() * size(); }
 
 Tensor::Dtype Tensor::dtype() const { return dtype_; }
 size_t Tensor::dtype_size() const {
@@ -31,5 +36,5 @@ size_t Tensor::dtype_size() const {
 void Tensor::resize(const std::vector<size_t> &shape, Dtype d) {
   shape_ = shape;
   dtype_ = d;
-  ptr_ = malloc(dtype_size() * size());
+  ptr_ = getAllocMap().at(tag_)(bytes());
 }

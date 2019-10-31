@@ -1,8 +1,10 @@
 #pragma once
 
 #include "error.h"
+#include "tag.h"
 #include "tensor.h"
 #include "variable.h"
+
 #include <functional>
 #include <stdexcept>
 #include <string>
@@ -42,9 +44,6 @@ struct Method {
   size_t num_outputs;
 };
 
-std::unordered_map<std::string, size_t> &getTagMap();
-size_t getTag(std::string tag_name);
-
 std::unordered_map<std::string, Method> &getMethodMap();
 inline const Method &getMethod(std::string name) {
   auto method_iter = getMethodMap().find(name);
@@ -59,6 +58,7 @@ public:
             std::function<void(Context &ctx)> kernel, size_t num_out) {
     auto &method = getMethodMap()[name];
     method.name = name;
+    // This is kind of sketchy if `getTag` is used elsewhere
     if (tag >= method.kernels.size()) {
       method.kernels.resize(tag + 1);
     }
