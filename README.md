@@ -8,7 +8,7 @@ Key tenets are:
 - All gradients are defined symbolically
 - All shapes are defined symbolically
 
-Although these restrictions depart somewhat from conventional "eager-mode" frameworks,
+Although these restrictions depart somewhat from conventional eager frameworks,
 they yield many interesting properties, such as:
 
 - Ability to differentiate with respect to any variable (i.e. no `requires_grad`)
