@@ -23,15 +23,8 @@ print("PH: ", time.time() - t)
 
 size = 128
 iters = 20000
-# y = a * x
-a = np.random.randn(size).astype(np.float32)
-ref = np.arange(size).astype(np.float32)
 
-a_ = torch.tensor(a)
-#a_.requires_grad = True
-r_ = torch.tensor(ref)
-a = ph.Tensor(a)
-r = ph.Tensor(ref)
+print()
 
 def loss_fn(a, r, x):
   y_r = r * x
@@ -41,9 +34,19 @@ def loss_fn(a, r, x):
   loss = loss / float(size)
   return loss
 
+a = np.random.randn(size).astype(np.float32)
+ref = np.arange(size).astype(np.float32)
 x = np.random.randn(size).astype(np.float32)
+
+t = time.time()
+for _ in range(iters):
+  k = loss_fn(a, ref, x)
+print("np: \t\t", time.time() - t)
+
 x_ = torch.tensor(x)
-ph_x = ph.Tensor(x)
+a_ = torch.tensor(a)
+r_ = torch.tensor(ref)
+
 t = time.time()
 for _ in range(iters):
   k = loss_fn(a_, r_, x_)
@@ -53,11 +56,18 @@ t = time.time()
 for _ in range(iters):
   k = loss_fn(a_, r_, x_)
 print("PT: req_grad\t", time.time() - t)
+
+ph_x = ph.Tensor(x)
+a = ph.Tensor(a)
+r = ph.Tensor(ref)
+
 t = time.time()
 for _ in range(iters):
   k2 = loss_fn(a, r, ph_x)
 print("hma: \t\t", time.time() - t)
 assert np.allclose(k.detach().numpy(), k2.np())
+
+print()
 
 t = time.time()
 for _ in range(iters):

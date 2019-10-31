@@ -1,3 +1,28 @@
+## Why?
+
+`hma` attempts to achieve front-end flexbility while being as backend friendly as possible.
+Key tenets are:
+
+- Execution is lazy
+- Every operation is pure
+- All gradients are defined symbolically
+- All shapes are defined symbolically
+
+Although these restrictions depart somewhat from conventional "eager-mode" frameworks,
+they yield many interesting properties, such as:
+
+- Ability to differentiate with respect to any variable (i.e. no `requires_grad`)
+- Ability to trade memory for compute
+- "Constness" deduction and compute caching
+- Hot-path compilation and optimization
+- Simple high-latency remote device integration (i.e. accelerators)
+
+
+## Status
+
+Toy-mode.  The `test_model.py` file shows the limit of what can be done today.
+Basically linear regression (with autograd for that usecase).
+
 ## Build + Test
 
 Setup a clean Python env:
@@ -12,8 +37,9 @@ Build from source:
 
 ```bash
 ./build.sh
-PYTHONPATH=. python ../test.py
+PYTHONPATH=build python test_model.py
 ```
+
 ## Usage
 
 ```python
