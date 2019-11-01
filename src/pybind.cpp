@@ -22,6 +22,16 @@ struct TensorRef {
 static Graph g;
 
 PYBIND11_MODULE(hma, m) {
+  py::class_<TensorRef, std::shared_ptr<TensorRef>>(m, "Tensor");
+
+  m.def("debug", [](bool on) {
+    if (on) {
+      setLaziness(0);
+    } else {
+      setLaziness(DEFAULT_LAZINESS);
+    }
+  });
+
   m.def("from_numpy",
         [](py::array_t<float, py::array::c_style | py::array::forcecast> arr)
             -> std::shared_ptr<TensorRef> {
@@ -55,7 +65,12 @@ PYBIND11_MODULE(hma, m) {
     return py::array_t<float>(buf);
   });
 
-  py::class_<TensorRef, std::shared_ptr<TensorRef>>(m, "Tensor");
+  m.def("get_tag", [](std::shared_ptr<TensorRef> tr) {
+    auto t = resolve(tr->variable);
+    return t->tag();
+  });
+
+  m.def("get_tag", [](std::string s) { return getTag(s); });
 
   for (const auto &method : getMethodMap()) {
     m.def(method.first.c_str(),

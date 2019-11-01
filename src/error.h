@@ -4,6 +4,8 @@
 #include <stdexcept>
 #include <string>
 
+// TODO add "error context" related to which line of
+// code the call came from originally. (e.g. python frame)
 class hma_exception : public std::runtime_error {
   std::string msg;
 
@@ -19,7 +21,7 @@ public:
 };
 
 #define THROW_LINE(arg) throw hma_exception(arg, __FILE__, __LINE__);
-#define HMA_ENFORCE(cond)                                                      \
+#define HMA_ENFORCE(cond, ...)                                                 \
   if (!(cond)) {                                                               \
-    THROW_LINE(#cond " failed.");                                              \
+    THROW_LINE(__VA_ARGS__ + " -- `" #cond "` failed.");                       \
   }

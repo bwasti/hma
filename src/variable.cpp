@@ -2,6 +2,8 @@
 #include "error.h"
 #include "method.h"
 
+#include <sstream>
+
 Operator::Operator(std::string name, const std::vector<Variable *> &inputs_,
                    size_t num_outputs, Graph *graph_)
     : inputs(inputs_), graph(graph_) {
@@ -19,18 +21,24 @@ Operator::Operator(std::string name, const std::vector<Variable *> &inputs_,
   }
 }
 
+static size_t laziness = DEFAULT_LAZINESS;
+void setLaziness(size_t laziness_) { laziness = laziness_; }
+
 std::vector<Variable *> call(const std::string &name,
                              const std::vector<Variable *> &vs) {
   HMA_ENFORCE(vs.size());
   auto *graph = vs[0]->graph;
   for (const auto &v : vs) {
     HMA_ENFORCE(graph == v->graph);
-    if (v->depth > 10000) {
-      v->tensor = resolve(v);
-    }
   }
   const auto &method = getMethod(name);
   auto op = graph->create_op(name, vs, method.num_outputs);
+  // Really, we only need to resolve the first and the rest are free
+  for (auto &output : op->outputs) {
+    if (output->depth >= laziness) {
+      output->tensor = resolve(output);
+    }
+  }
   for (auto &v : vs) {
     v->deps.emplace_back(op);
   }
@@ -43,24 +51,46 @@ Tensor *resolve(const Variable *v) {
     return v->tensor;
   } else {
     HMA_ENFORCE(v->op);
+    auto &method = *v->op->method;
     std::vector<const Tensor *> inputs;
     for (const auto &i : v->op->inputs) {
       inputs.emplace_back(resolve(i));
     }
-    const auto &tag = inputs[0]->tag();
+
+    // For debugging
+    auto index = 0;
+    const auto &tag = inputs[index]->tag();
+
     for (const auto &input : inputs) {
-      HMA_ENFORCE(input->tag() == tag);
+      if (input->tag() != tag) {
+        std::stringstream ss;
+        ss << "method \"" << method.name << "\" passed invalid tag "
+           << getTagName(input->tag()) << " at index " << index << ", expected "
+           << getTagName(tag);
+        HMA_ENFORCE(input->tag() == tag, ss.str());
+      }
+      index++;
     }
+
     std::vector<Tensor *> outputs;
     for (const auto &o : v->op->outputs) {
       o->tensor = new Tensor(tag);
       outputs.emplace_back(o->tensor);
     }
-    auto &method = *v->op->method;
     Context ctx{inputs, outputs};
-    HMA_ENFORCE(method.kernels.size() > tag);
-    const auto &f = method.kernels.at(tag);
-    HMA_ENFORCE(f);
+    if (method.kernels.size() <= tag) {
+      std::stringstream ss;
+      ss << "no method \"" << method.name << "\" on device \""
+         << getTagName(tag) << "\"";
+      HMA_ENFORCE(method.kernels.size() > tag, ss.str());
+    }
+    const auto &f = method.kernels[tag];
+    if (!f) {
+      std::stringstream ss;
+      ss << "no method \"" << method.name << "\" on device \""
+         << getTagName(tag) << "\"";
+      HMA_ENFORCE(f, ss.str());
+    }
     f(ctx);
     v->depth = 0;
     return v->tensor;

@@ -88,18 +88,33 @@ Variable *grad(Variable *y, Variable *x, Variable *j) {
         HMA_ENFORCE(grad_inp_iter != grad_map.end());
         grad_inputs.emplace_back(grad_inp_iter->second);
       }
-      auto g_outs = op->method->grad(op->inputs, grad_inputs);
-      for (auto i = 0; i < g_outs.size(); ++i) {
-        auto input = op->inputs[i];
+      bool run_grad = false;
+      for (const auto &input : op->inputs) {
         if (need_grad.find(input) != need_grad.end()) {
-          if (grad_map.find(input) != grad_map.end()) {
-            grad_map[input] = call("add", {grad_map[input], g_outs[i]})[0];
-          } else {
-            grad_map[input] = g_outs[i];
-          }
-          if (input->op && seen_ops.find(input->op) == seen_ops.end()) {
-            next_frontier.emplace_back(input->op);
-            seen_ops.insert(input->op);
+          run_grad = true;
+          break;
+        }
+      }
+      if (run_grad) {
+        const auto &g = op->method->grad;
+        if (!g) {
+          std::stringstream ss;
+          ss << "no known grad for method \"" << op->method->name << "\"";
+          HMA_ENFORCE(g, ss.str());
+        }
+        auto g_outs = g(op->inputs, grad_inputs);
+        for (auto i = 0; i < g_outs.size(); ++i) {
+          auto input = op->inputs[i];
+          if (need_grad.find(input) != need_grad.end()) {
+            if (grad_map.find(input) != grad_map.end()) {
+              grad_map[input] = call("add", {grad_map[input], g_outs[i]})[0];
+            } else {
+              grad_map[input] = g_outs[i];
+            }
+            if (input->op && seen_ops.find(input->op) == seen_ops.end()) {
+              next_frontier.emplace_back(input->op);
+              seen_ops.insert(input->op);
+            }
           }
         }
       }

@@ -12,3 +12,12 @@ size_t getTag(std::string tag_name) {
   }
   return getTagMap().at(tag_name);
 }
+
+std::string getTagName(size_t tag) {
+  for (const auto &pair : getTagMap()) {
+    if (pair.second == tag) {
+      return pair.first;
+    }
+  }
+  return "";
+}

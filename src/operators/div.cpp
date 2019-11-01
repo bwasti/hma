@@ -20,8 +20,10 @@ REGISTER_GRAD(div,
                   -> std::vector<Variable *> {
                 auto b_2 = call("mul", {inputs[1], inputs[1]})[0];
                 auto a_div_b_2 = call("div", {inputs[0], b_2})[0];
-                return {call("div", {ginputs[0], inputs[1]})[0],
-                        call("neg", {a_div_b_2})[0]};
+								return {
+									call("div", {ginputs[0], inputs[1]})[0],
+									call("mul", {ginputs[0], call("neg", {a_div_b_2})[0]})[0]
+								};
               });
 
 REGISTER_SHAPE(div,

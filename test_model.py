@@ -98,6 +98,48 @@ for _ in range(iters):
   a = a - a_grad * 0.1
   if not ((_ + 1) % iters):
     #print(loss.np(), a.np())
-    assert np.allclose(a_.detach().numpy(), ref)
+    assert np.allclose(a.np(), ref)
 print("hma regression\t", time.time() - t)
+
+device = torch.device('cuda', 0)
+t = time.time()
+a_ = torch.tensor(np.random.randn(size).astype(np.float32)).to(device)
+r_ = r_.to(device)
+a_ = a_.to(device)
+a_.requires_grad = True
+for _ in range(iters):
+  x = torch.tensor(np.random.randn(size).astype(np.float32)).to(device)
+  if a_.grad is not None:
+    a_.grad.data = torch.zeros(a_.shape).to(device)
+  y_r = r_ * x
+  y = a_ * x
+  diff = y_r - y
+  loss = (diff * diff).sum()
+  loss = loss / float(size)
+  loss.backward()
+  a_.data = a_ - a_.grad * 0.1
+  if not ((_ + 1) % iters):
+    #print(loss.item(), a_.detach().numpy())
+    assert np.allclose(a_.detach().cpu().numpy(), ref)
+print("PT regression gpu\t", time.time() - t)
+
+#hma.debug(True)
+
+a = np.random.randn(size).astype(np.float32)
+a = ph.Tensor(a).cuda()
+r = r.cuda()
+t = time.time()
+for _ in range(iters):
+  x = ph.Tensor(np.random.randn(size).astype(np.float32)).cuda()
+  y_r = r * x
+  y = a * x
+  diff = y_r - y
+  loss = (diff * diff).sum()
+  loss = loss / float(size)
+  a_grad = loss.grad(a)()
+  a = a - a_grad * 0.1
+  if not ((_ + 1) % iters):
+    #print(loss.np(), a.cpu().np())
+    assert np.allclose(a.cpu().np(), ref)
+print("hma regression gpu\t", time.time() - t)
 

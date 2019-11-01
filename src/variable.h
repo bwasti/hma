@@ -5,6 +5,23 @@
 #include <list>
 #include <vector>
 
+struct Variable;
+struct Tensor;
+
+// Main API, call is a lazy invocation.
+std::vector<Variable *> call(const std::string &,
+                             const std::vector<Variable *> &);
+// Resolve evaluates the recorded operations and produces
+// a real Tensor.
+Tensor *resolve(const Variable *v);
+
+// By default, call only records a maximum of DEFAULT_LAZINESS
+// operations before resolving itself into cache.
+#define DEFAULT_LAZINESS 10000
+void setLaziness(size_t laziness);
+
+// Implementation details below
+
 struct Size {
   enum Tag { Id, Number };
   Tag tag;
@@ -17,12 +34,6 @@ struct Size {
   int num;
   // }
 };
-
-struct Variable;
-
-std::vector<Variable *> call(const std::string &,
-                             const std::vector<Variable *> &);
-Tensor *resolve(const Variable *v);
 
 struct Method;
 struct Graph;

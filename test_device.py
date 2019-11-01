@@ -16,3 +16,7 @@ a = ph.Tensor(a).cuda()
 b = ph.Tensor(b).cuda()
 c = a * b
 assert np.allclose(c.cpu().np(), c_ref)
+
+_ = np.random.randn(128)
+k = ph.Tensor(_).cuda().sum()
+print(k.cpu().np(), _.sum())
