@@ -8,7 +8,10 @@ iters = 10000
 a = np.random.randn(1,1)
 a_ph = ph.Tensor(a)
 a_t = torch.tensor(a)
+h2 = ph.Tensor(np.array(2.0)).broadcast_like(a_ph)
 
+for _ in range(iters):
+  _ = (a_t + a_t) / 2
 t = time.time()
 for _ in range(iters):
   a_t = (a_t + a_t) / 2

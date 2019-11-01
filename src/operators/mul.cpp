@@ -23,6 +23,6 @@ REGISTER_GRAD(mul,
               });
 
 REGISTER_SHAPE(mul,
-               [](const std::vector<Variable *> &inputs) -> std::vector<Size> {
-                 return inputs[0]->shape;
+               [](const std::vector<Variable *> &inputs) -> std::vector<Shape> {
+                 return { inputs[0]->shape };
                });

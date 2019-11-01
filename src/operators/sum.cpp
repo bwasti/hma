@@ -21,6 +21,6 @@ REGISTER_GRAD(sum,
               });
 
 REGISTER_SHAPE(sum,
-               [](const std::vector<Variable *> &inputs) -> std::vector<Size> {
-                 return {Size(1)};
+               [](const std::vector<Variable *> &inputs) -> std::vector<Shape> {
+                 return { {Size(1)} };
                });

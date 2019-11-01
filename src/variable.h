@@ -1,5 +1,6 @@
 #pragma once
 
+#include "error.h"
 #include "tensor.h"
 
 #include <list>
@@ -8,9 +9,10 @@
 struct Variable;
 struct Tensor;
 
-// Main API, call is a lazy invocation.
+// Main API, call is a lazy invocation. debug_info optional
 std::vector<Variable *> call(const std::string &,
-                             const std::vector<Variable *> &);
+                             const std::vector<Variable *> &,
+                             std::string debug_info = "");
 // Resolve evaluates the recorded operations and produces
 // a real Tensor.
 Tensor *resolve(const Variable *v);
@@ -23,17 +25,18 @@ void setLaziness(size_t laziness);
 // Implementation details below
 
 struct Size {
-  enum Tag { Id, Number };
+  enum class Tag { Id, Number };
+
+  Size(size_t i) : tag(Tag::Number), data(i) {}
+  Size() : tag(Tag::Id), data(getNewId()) {}
+  std::string str() const;
+
+  size_t getNewId();
+
   Tag tag;
-
-  Size(int i) : tag(Number), num(i) {}
-  Size() : tag(Id), id(1337) {}
-
-  // union {
-  int id;
-  int num;
-  // }
+  size_t data;
 };
+using Shape = std::vector<Size>;
 
 struct Method;
 struct Graph;

@@ -1,7 +1,25 @@
+import hma
 import pyhma as ph
 import numpy as np
 import torch
 
+a = np.random.randn(128,128)
+b = np.random.randn(128,128)
+a = ph.Tensor(a)
+b = ph.Tensor(b)
+c = a * b
+exit(0)
+
+a = np.random.randn(128,128)
+a = ph.Tensor(a)
+print(str(a.shape))
+j = hma.Size()
+k = hma.Size()
+v = ph.Tensor((j, k))
+s = v.shape
+print(s)
+assert int(v.sum().shape[0]) == 1
+ 
 def test_bin_op(f):
   for s in [(1,), (2,2), (128,128)]:
     an = np.random.randn(*s)

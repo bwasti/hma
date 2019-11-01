@@ -27,6 +27,6 @@ REGISTER_GRAD(div,
               });
 
 REGISTER_SHAPE(div,
-               [](const std::vector<Variable *> &inputs) -> std::vector<Size> {
-                 return inputs[0]->shape;
+               [](const std::vector<Variable *> &inputs) -> std::vector<Shape> {
+                 return { inputs[0]->shape };
                });

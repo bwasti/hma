@@ -34,7 +34,7 @@ using GradFn = std::function<std::vector<Variable *>(
     const std::vector<Variable *> &, const std::vector<Variable *> &)>;
 
 using ShapeFn =
-    std::function<std::vector<Size>(const std::vector<Variable *> &)>;
+    std::function<std::vector<Shape>(const std::vector<Variable *> &)>;
 
 struct Method {
   std::string name;

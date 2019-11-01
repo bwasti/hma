@@ -21,11 +21,29 @@ Operator::Operator(std::string name, const std::vector<Variable *> &inputs_,
   }
 }
 
+size_t Size::getNewId() {
+  static size_t id = 1;
+  return id++;
+}
+
+std::string Size::str() const {
+  std::stringstream ss;
+  HMA_ENFORCE(tag == Tag::Id);
+  size_t k = data;
+  while (k) {
+    auto n = k % 26;
+    ss << "ABCDEFGHIJKLMNOPQRSTUVWXYZ"[n - 1];
+    k /= 26;
+  }
+  return ss.str();
+}
+
 static size_t laziness = DEFAULT_LAZINESS;
 void setLaziness(size_t laziness_) { laziness = laziness_; }
 
 std::vector<Variable *> call(const std::string &name,
-                             const std::vector<Variable *> &vs) {
+                             const std::vector<Variable *> &vs,
+                             std::string debug_info) {
   HMA_ENFORCE(vs.size());
   auto *graph = vs[0]->graph;
   for (const auto &v : vs) {
@@ -33,11 +51,21 @@ std::vector<Variable *> call(const std::string &name,
   }
   const auto &method = getMethod(name);
   auto op = graph->create_op(name, vs, method.num_outputs);
-  // Really, we only need to resolve the first and the rest are free
+
+  size_t index = 0;
+  if (!method.shape) {
+    std::stringstream ss;
+    ss << "method \"" << method.name << "\" has no shape function";
+    HMA_ENFORCE(method.shape, ss.str());
+  }
+  const auto &shapes = method.shape(vs);
   for (auto &output : op->outputs) {
+    output->shape = shapes[index];
+    // Really, we only need to resolve the first and the rest are free
     if (output->depth >= laziness) {
       output->tensor = resolve(output);
     }
+    index++;
   }
   for (auto &v : vs) {
     v->deps.emplace_back(op);

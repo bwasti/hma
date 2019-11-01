@@ -41,3 +41,13 @@ REGISTER_METHOD(CUDA, to_cpu, [](Context &ctx) {
   auto res = cudaMemcpy(out_d, d, t.bytes(), cudaMemcpyDeviceToHost);
   HMA_ENFORCE(res == cudaSuccess);
 });
+
+REGISTER_SHAPE(to_cpu,
+               [](const std::vector<Variable *> &inputs) -> std::vector<Shape> {
+                 return {inputs[0]->shape};
+               });
+
+REGISTER_SHAPE(to_cuda,
+               [](const std::vector<Variable *> &inputs) -> std::vector<Shape> {
+                 return {inputs[0]->shape};
+               });
