@@ -98,3 +98,22 @@ public:
   static RegGrad _reg_grad_##name(#name, __VA_ARGS__);
 #define REGISTER_SHAPE(name, ...)                                              \
   static RegShape _reg_shape_##name(#name, __VA_ARGS__);
+
+struct pair_hash {
+  template <class T1, class T2>
+  std::size_t operator() (const std::pair<T1, T2> &pair) const {
+    return std::hash<T1>()(pair.first) ^ std::hash<T2>()(pair.second);
+  }
+};
+std::unordered_map<std::pair<size_t, size_t>, std::string, pair_hash>& getTagToMap();
+
+class RegTagTo {
+public:
+  RegTagTo(size_t tag_from, size_t tag_to, std::string name) {
+    getTagToMap()[std::make_pair(tag_from, tag_to)] = name;
+  }
+};
+
+#define REGISTER_TAG_TO(from, to, name)
+
+const std::function<void(Context &ctx)>& tagToMethod(size_t from, size_t to);

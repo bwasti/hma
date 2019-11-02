@@ -42,6 +42,9 @@ REGISTER_METHOD(CUDA, to_cpu, [](Context &ctx) {
   HMA_ENFORCE(res == cudaSuccess);
 });
 
+REGISTER_TAG_TO(CUDA, CPU, to_cpu);
+REGISTER_TAG_TO(CPU, CUDA, to_cuda);
+
 REGISTER_SHAPE(to_cpu,
                [](const std::vector<Variable *> &inputs) -> std::vector<Shape> {
                  return {inputs[0]->shape};

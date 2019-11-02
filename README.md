@@ -97,18 +97,12 @@ outputs = hma.mul([inputs])
 The differentiation of any tensor (`y`) with respect to another tensor (`x`) consists of
 walking the graph of deps and finding all paths between the variables.
 
-## Optimizations
-
-Every Tensor is "lazy," which means they tote around a full history of their creation.
-This allows a suite of "fusion" optimizations.
-
-Every operation is "pure" so these histories can recomputed at any time.
-This allows caching and automatic tradeoffs between compute and memory consumption.
-
 ## Python Wrapper
 
 `pyhma.py` contains useful wrappers to make `hma` feel more like a Python library.
 
 ## TODO
 
-Although size/shape stuff has been stubbed out, it hasn't been implemented in a usable way.
+- Pointer sharing on no-ops
+- Automatic recompute
+- Garbage collection

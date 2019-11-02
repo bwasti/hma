@@ -49,9 +49,7 @@ class Tensor:
 
   @property
   def tag(self):
-    if not "tag" in self.cache:
-      self.cache["tag"] = hma.get_tag(self.cTensor)
-    return self.cache["tag"]
+    return hma.get_tag(self.cTensor)
 
   def scalar_like(self, scalar):
     l = self.__class__(hma.from_scalar(scalar))
@@ -115,10 +113,7 @@ class Tensor:
     return self.__class__(hma.sum([self.cTensor])[0])
 
   def broadcast_like(self, like):
-    if self.tag == CUDA and like.tag == CPU:
-      self = self.cpu()
-    if self.tag == CPU and like.tag == CUDA:
-      self = self.cuda()
+    self.cTensor = hma.tag_like([self.cTensor, like.cTensor])[0]
     return self.__class__(hma.broadcast([self.cTensor, like.cTensor])[0])
 
   def np(self):
