@@ -1,13 +1,5 @@
 #include "method.h"
-#include <cudnn.h>
-#include <cuda_runtime.h>
-
-#define checkCUDNN(expression)                               \
-  {                                                          \
-    cudnnStatus_t status = (expression);                     \
-    HMA_ENFORCE(status == CUDNN_STATUS_SUCCESS,              \
-								std::string(cudnnGetErrorString(status)));   \
-  }
+#include "operators/cuda/cudnn.h"
 
 void setConvParams(
 	cudnnTensorDescriptor_t& srcTensorDesc,
@@ -58,6 +50,7 @@ REGISTER_METHOD(CUDA, conv, [](Context &ctx) {
   const auto &t2 = ctx.input(1);
   // bias
   if (ctx.num_inputs() > 2) {
+    HMA_ENFORCE(0, std::string("bias not yet supported"));
 		const auto &t3 = ctx.input(2);
 	}
   auto *out = ctx.output(0);

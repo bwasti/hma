@@ -81,6 +81,11 @@ PYBIND11_MODULE(hma, m) {
           auto *t = v->tensor;
           t->resize(std::vector<size_t>{buf.shape.begin(), buf.shape.end()},
                     Tensor::Dtype::float_);
+          for (size_t i = 0; i < buf.ndim; ++i) {
+            const auto stride = buf.strides[i];
+            HMA_ENFORCE(stride == sizeof(float) * t->size(i + 1),
+              std::string("Can't handle strided numpy arrays.  Use numpy.ascontiguousarray"));
+          }
           memcpy(t->ptr(), buf.ptr, t->size() * t->dtype_size());
           return tr;
         });

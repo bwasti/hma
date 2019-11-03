@@ -116,6 +116,9 @@ class Tensor:
     self.cTensor = hma.tag_like([self.cTensor, like.cTensor])[0]
     return self.__class__(hma.broadcast([self.cTensor, like.cTensor])[0])
 
+  def fc(self, w):
+    return self.__class__(hma.mm_nt([self.cTensor, w.cTensor])[0])
+
   def np(self):
     return hma.to_numpy(self.cTensor)
 

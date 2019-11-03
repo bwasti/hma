@@ -2,6 +2,65 @@ import hma
 import pyhma as ph
 import numpy as np
 import torch
+import time
+
+hma.set_debug(True)
+device = torch.device('cuda', 0)
+
+N = 64
+C_i = 128
+C_o = 32
+xnp = np.random.randn(N, C_i).astype(np.float32)
+wnp = np.random.randn(C_o, C_i).astype(np.float32)
+snp = np.random.randn(N, C_o).astype(np.float32)
+
+xt = torch.tensor(xnp).to(device)
+wt = torch.tensor(wnp).to(device)
+st = torch.tensor(snp).to(device)
+
+yt = torch.nn.functional.linear(xt, wt)
+
+x = ph.Tensor(xnp).cuda()
+w = ph.Tensor(wnp).cuda()
+s = ph.Tensor(snp).cuda()
+
+y = ph.Tensor(hma.mm_nt([x.cTensor, w.cTensor])[0])
+
+ynp = y.cpu().np()
+torch.testing.assert_allclose(y.cpu().np(), yt.cpu())
+
+print("passed.")
+
+t = time.perf_counter()
+for i in range(10000):
+	_ = torch.nn.functional.linear(xt, wt)
+print(_.cpu().numpy().shape)
+print(time.perf_counter() - t)
+
+t = time.perf_counter()
+for i in range(10000):
+	_ = ph.Tensor(hma.mm_nt([x.cTensor, w.cTensor])[0])
+print(_.cpu().np().shape)
+print(time.perf_counter() - t)
+
+xt.requires_grad = True
+wt.requires_grad = True
+
+yt = torch.nn.functional.linear(xt, wt) * st
+y = ph.Tensor(hma.mm_nt([x.cTensor, w.cTensor])[0]) * s
+torch.testing.assert_allclose(y.cpu().np(), yt.cpu())
+
+yt.sum().backward()
+
+w_grad = y.sum().grad(w)()
+torch.testing.assert_allclose(w_grad.cpu().np(), wt.grad.cpu())
+print("passed dw")
+
+x_grad = y.sum().grad(x)()
+torch.testing.assert_allclose(x_grad.cpu().np(), xt.grad.cpu())
+print("passed dx")
+
+print("passed grad.")
 
 xnp = np.random.randn(4,3,128,128).astype(np.float32)
 wnp = np.random.randn(5,3,3,3).astype(np.float32)
@@ -9,9 +68,6 @@ wnp = np.random.randn(5,3,3,3).astype(np.float32)
 x = ph.Tensor(xnp).cuda()
 w = ph.Tensor(wnp).cuda()
 
-hma.set_debug(True)
-
-import time
 hma.resolve(x.cTensor)
 hma.resolve(w.cTensor)
 
