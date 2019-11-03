@@ -3,21 +3,74 @@ import pyhma as ph
 import numpy as np
 import torch
 
+xnp = np.random.randn(4,3,128,128).astype(np.float32)
+wnp = np.random.randn(5,3,3,3).astype(np.float32)
+
+x = ph.Tensor(xnp).cuda()
+w = ph.Tensor(wnp).cuda()
+
+hma.set_debug(True)
+
+import time
+hma.resolve(x.cTensor)
+hma.resolve(w.cTensor)
+
+y = ph.Tensor(hma.conv([x.cTensor, w.cTensor])[0])
+
+t = time.perf_counter()
+for i in range(1000):
+  _ = ph.Tensor(hma.conv([x.cTensor, w.cTensor])[0])
+print(_.cpu().np().shape)
+print(time.perf_counter() - t)
+
+onp = np.ones((4,5,126,126))
+o = ph.Tensor(onp).cuda()
+dx = y.sum().grad(x)()
+dw = y.sum().grad(w)()
+
+xt = torch.tensor(xnp)
+wt = torch.tensor(wnp)
+
+t = time.perf_counter()
+for i in range(1000):
+  _ = torch.nn.functional.conv2d(xt, wt)
+print(_.cpu().numpy().shape)
+print(time.perf_counter() - t)
+
+xt.requires_grad = True
+wt.requires_grad = True
+
+t = time.perf_counter()
+for i in range(1000):
+  _ = torch.nn.functional.conv2d(xt, wt)
+print(_.cpu().detach().numpy().shape)
+print(time.perf_counter() - t)
+
+yt = torch.nn.functional.conv2d(xt, wt)
+
+
+yt.sum().backward()
+
+torch.testing.assert_allclose(y.cpu().np(), yt      , rtol=0.001, atol=0.001)
+torch.testing.assert_allclose(dx.cpu().np(), xt.grad, rtol=0.001, atol=0.001)
+torch.testing.assert_allclose(dw.cpu().np(), wt.grad, rtol=0.001, atol=0.001)
+
 a = np.random.randn(128,128)
 b = np.random.randn(128,128)
 a = ph.Tensor(a)
 b = ph.Tensor(b)
 c = a * b
-exit(0)
 
 a = np.random.randn(128,128)
 a = ph.Tensor(a)
-print(str(a.shape))
+print(a.shape)
 j = hma.Size()
 k = hma.Size()
 v = ph.Tensor((j, k))
 s = v.shape
 print(s)
+hma.set_debug(False)
+# TODO when debug is on this fails
 assert int(v.sum().shape[0]) == 1
  
 def test_bin_op(f):

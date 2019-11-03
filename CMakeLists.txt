@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.7)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -D_GLIBCXX_USE_CXX11_ABI=0 -fPIC -Wl,--no-as-needed")
+set(CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake/)
 
 file(GLOB SRCS
   ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp
@@ -31,12 +32,14 @@ list(APPEND HMA_LIBS hma_cpu)
 
 find_package(CUDA)
 if (CUDA_FOUND)
+  find_package(CUDNN REQUIRED)
   file(GLOB CUDA_OPERATOR_SRCS
     ${CMAKE_CURRENT_SOURCE_DIR}/src/operators/cuda/*.cu
     ${CMAKE_CURRENT_SOURCE_DIR}/src/operators/cuda/*.cpp
   )
   cuda_add_library(hma_cuda SHARED ${CUDA_OPERATOR_SRCS})
-  target_link_libraries(hma_cuda hma_base)
+  target_include_directories(hma_cuda PUBLIC ${CUDNN_INCLUDE_DIR})
+  target_link_libraries(hma_cuda hma_base ${CUDNN_LIBRARY_PATH})
   list(APPEND HMA_LIBS hma_cuda)
 endif()
 

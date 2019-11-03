@@ -1,22 +1,27 @@
 #include "alloc.h"
 #include "method.h"
+#include "operators/tag_like.h"
 #include <cuda_runtime.h>
 
 void *cuda_malloc(size_t size) {
   void *out;
-  // TODO check error
   auto res = cudaMalloc(&out, size);
   HMA_ENFORCE(res == cudaSuccess);
   return out;
 }
 
 void cuda_free(void *ptr) {
-  // TODO check error
   auto res = cudaFree(ptr);
   HMA_ENFORCE(res == cudaSuccess);
 }
 
-REGISTER_ALLOC(CUDA, &cuda_malloc, &cuda_free);
+void* cuda_memcpy(void *dst, const void* src, size_t bytes) {
+  auto res = cudaMemcpy(dst, src, bytes, cudaMemcpyDeviceToDevice);
+  HMA_ENFORCE(res == cudaSuccess);
+  return dst;
+}
+
+REGISTER_ALLOC(CUDA, &cuda_malloc, &cuda_free, &cuda_memcpy);
 
 REGISTER_METHOD(CPU, to_cuda, [](Context &ctx) {
   const auto &t = ctx.input(0);
@@ -42,8 +47,9 @@ REGISTER_METHOD(CUDA, to_cpu, [](Context &ctx) {
   HMA_ENFORCE(res == cudaSuccess);
 });
 
-REGISTER_TAG_TO(CUDA, CPU, to_cpu);
-REGISTER_TAG_TO(CPU, CUDA, to_cuda);
+REGISTER_TAG_PAIR(CUDA, CPU, to_cpu);
+REGISTER_TAG_PAIR(CPU, CUDA, to_cuda);
+REGISTER_METHOD(CUDA, tag_like, genericTagLike);
 
 REGISTER_SHAPE(to_cpu,
                [](const std::vector<Variable *> &inputs) -> std::vector<Shape> {
