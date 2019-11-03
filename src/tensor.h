@@ -9,17 +9,15 @@ public:
   enum class Dtype {
     float_,
     int_,
+    byte_,
   };
   Tensor() : tag_(getTag("CPU")) {}
   Tensor(size_t tag) : tag_(tag) {}
   Tensor(std::vector<size_t> shape) : shape_(shape) {}
   Tensor(std::vector<size_t> shape, void *ptr, Dtype d)
       : shape_(shape), ptr_(ptr), dtype_(d) {}
-  ~Tensor() {
-    if (ptr_) {
-      free(ptr_);
-    }
-  }
+  ~Tensor();
+
   std::vector<size_t> shape() const;
   void resize(const std::vector<size_t> &, Dtype);
   size_t size(size_t from = 0) const;

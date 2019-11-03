@@ -1,5 +1,7 @@
 #include "tensor.h"
 #include "alloc.h"
+#include "error.h"
+#include <sstream>
 
 std::vector<size_t> Tensor::shape() const { return shape_; }
 void *Tensor::ptr() { return ptr_; }
@@ -30,11 +32,26 @@ size_t Tensor::dtype_size() const {
     return sizeof(float);
   case Tensor::Dtype::int_:
     return sizeof(int);
+  case Tensor::Dtype::byte_:
+    return sizeof(char);
   }
   return 0;
 }
 void Tensor::resize(const std::vector<size_t> &shape, Dtype d) {
   shape_ = shape;
   dtype_ = d;
-  ptr_ = getAllocMap().at(tag_)(bytes());
+  auto alloc = getAllocMap().at(tag_);
+  if (!alloc) {
+    std::stringstream ss;
+    ss << "couldn't find allocator for tag "
+      << getTagName(tag_);
+    HMA_ENFORCE(alloc, ss.str());
+  }
+  ptr_ = alloc(bytes());
+}
+
+Tensor::~Tensor() {
+  if (ptr_) {
+    getDeallocMap().at(tag_)(ptr_);
+  }
 }

@@ -169,4 +169,8 @@ PYBIND11_MODULE(hma, m) {
     tr->graph = tr->variable->graph;
     return tr;
   });
+
+  m.def("resolve", [](std::shared_ptr<TensorRef> x) -> void {
+    resolve(x->variable);
+  });
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "error.h"
+#include "exec.h"
 #include "tag.h"
 #include "tensor.h"
 #include "variable.h"
@@ -22,6 +23,7 @@ public:
                    std::vector<Tensor *> &outputs)
       : inputs_(inputs), outputs_(outputs) {}
   const Tensor &input(int index);
+  size_t num_inputs() const;
   Tensor *output(int index);
   std::vector<Tensor *> outputs();
 
@@ -47,7 +49,7 @@ struct Method {
 std::unordered_map<std::string, Method> &getMethodMap();
 inline const Method &getMethod(std::string name) {
   auto method_iter = getMethodMap().find(name);
-  HMA_ENFORCE(method_iter != getMethodMap().end());
+  HMA_ENFORCE(method_iter != getMethodMap().end(), name);
   auto &method = method_iter->second;
   return method;
 }
@@ -55,7 +57,7 @@ inline const Method &getMethod(std::string name) {
 class RegMethod {
 public:
   RegMethod(size_t tag, std::string name,
-            std::function<void(Context &ctx)> kernel, size_t num_out) {
+            std::function<void(Context &ctx)> kernel, size_t num_out=1) {
     auto &method = getMethodMap()[name];
     method.name = name;
     // This is kind of sketchy if `getTag` is used elsewhere
@@ -79,18 +81,8 @@ public:
   }
 };
 
-#define REG_W_NUM_OUTPUTS(tag, name, kernel, num_outputs)                      \
-  static RegMethod _reg_method_##name_##tag(getTag(#tag), #name, kernel,       \
-                                            num_outputs);
-#define REG_DEFAULT_OUTPUTS(tag, name, kernel)                                 \
-  static RegMethod _reg_method_##name_##tag(getTag(#tag), #name, kernel, 1);
-
-// Cool trick, right? Found on stackoverflow
-#define GET_5TH_ARG(arg1, arg2, arg3, arg4, arg5, ...) arg5
-#define REG_METHOD_MACRO_CHOOSER(...)                                          \
-  GET_5TH_ARG(__VA_ARGS__, REG_W_NUM_OUTPUTS, REG_DEFAULT_OUTPUTS)
-
-#define REGISTER_METHOD(...) REG_METHOD_MACRO_CHOOSER(__VA_ARGS__)(__VA_ARGS__)
+#define REGISTER_METHOD(tag, name, ...) \
+  static RegMethod _reg_method_##name##_##tag(getTag(#tag), #name, __VA_ARGS__);
 #define REGISTER_CPU_METHOD(...) REGISTER_METHOD(CPU, __VA_ARGS__)
 
 // ...'s are for commas in the macro invocations (with lambdas)
@@ -105,15 +97,16 @@ struct pair_hash {
     return std::hash<T1>()(pair.first) ^ std::hash<T2>()(pair.second);
   }
 };
-std::unordered_map<std::pair<size_t, size_t>, std::string, pair_hash>& getTagToMap();
+std::unordered_map<std::pair<size_t, size_t>, std::string, pair_hash>& getTagPairMap();
 
-class RegTagTo {
+class RegTagPair {
 public:
-  RegTagTo(size_t tag_from, size_t tag_to, std::string name) {
-    getTagToMap()[std::make_pair(tag_from, tag_to)] = name;
+  RegTagPair(size_t tag_from, size_t tag_to, std::string name) {
+    getTagPairMap()[std::make_pair(tag_from, tag_to)] = name;
   }
 };
 
-#define REGISTER_TAG_TO(from, to, name)
+#define REGISTER_TAG_PAIR(from, to, name) \
+  static RegTagPair _reg_tag_pair_##name##_##from##_##to(getTag(#from), getTag(#to), #name);
 
-const std::function<void(Context &ctx)>& tagToMethod(size_t from, size_t to);
+const std::function<void(Context &ctx)>& tagPairMethod(size_t from, size_t to);

@@ -1,6 +1,7 @@
 #include "grad.h"
 #include "error.h"
 #include "method.h"
+#include "exec.h"
 
 #include <queue>
 #include <set>
