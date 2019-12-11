@@ -3,7 +3,7 @@
 `hma` attempts to achieve front-end flexbility while being as backend friendly and lightweight as possible.
 Note that it is a very early work in progress!
 
-Key tenets are:
+Key tenets of `hma`'s design are:
 
 - Execution is lazy
 - Every operation is pure
